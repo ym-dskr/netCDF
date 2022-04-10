@@ -1,0 +1,68 @@
+---
+title: "netCDF概要"
+output:
+  html_document:
+    theme: cosmo
+    highlight: textmate
+    toc: true
+    toc_float:
+      collapse: false
+    df_print: "tibble"
+    css: site_style.css
+---
+
+# 参照元
+https://qiita.com/atchicken/items/609f04b3109dde062719
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# netCDFの作成方法
+netcdf4 moduleを入れておく必要がある。
+
+```{python}
+# !pip install netcdf4
+```
+
+
+# netCDFへの書き込み方法
+
+```{python}
+import netCDF4 as nc4
+
+ncPath = "../output/test.nc"
+nc = nc4.Dataset(ncPath, "w", format="NETCDF4")
+
+# 例：lonList(1d), latList(1d), tempList(2d)にデータを格納
+lonList = [1,1]
+latList = [2,1]
+tempList = [[1,2], [1,2]]
+
+nc.createDimension("x", len(lonList))
+nc.createDimension("y", len(latList))
+
+lon = nc.createVariable("lon", "i2", "x")
+lat = nc.createVariable("lat", "i2", "y")
+temp = nc.createVariable("temp", "i2", ("y", "x"), fill_value=99999)
+
+lon[:], lat[:], temp[:, :] = lonList, latList, tempList
+
+# nc.close()
+```
+
+historyでファイルの履歴を登録可能。データ作成日時などを入れたら良さそう。  
+変数についてはlong_nameで名称、unitsで単位を登録可能。  
+内容はprintすれば簡単にみれる。  
+
+```{python}
+nc.history = "Create New"
+temp.long_name = "Temperature"
+temp.units = "Degree of Celsius"
+
+print(nc)
+```
+
+createDimensionで次元を設定後、createVariable()で変数を作成可能。  
+引数はデータ名称、型（i1=int8, i2=int16, etc.）、形状。  
+fill_valueで欠損値の登録が可能なのも非常に便利。  
